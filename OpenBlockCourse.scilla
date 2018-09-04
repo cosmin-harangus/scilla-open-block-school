@@ -1,4 +1,4 @@
-library OpenBookScool
+library OpenBlockScool
 
 let one_msg =
   fun (msg: Message) =>
@@ -7,15 +7,15 @@ let one_msg =
 
 (* error codes library *)
 let code_success = Uint32 0
-let code_book_not_found = Uint32 1
+let code_course_not_found = Uint32 1
 let code_not_authorized = Uint32 2
 let code_invalid_params = Uint32 3
-let code_bookid_exist = Uint32 4
+let code_courseid_exist = Uint32 4
 
 (***************************************************)
 (*             The contract definition             *)
 (***************************************************)
-contract OpenBookScool
+contract OpenBlockScool
 (owner: ByStr20,
 schoolName: String)
 
@@ -113,35 +113,27 @@ transition addStudent(name: String, addr: ByStr20, memberType: Uint32)
 end
 
 
-transition addCourse(book_title: String, author: String, bookID: Uint32)
+transition addCourse(course_title: String, author: String, courseID: Uint32)
 
-    (* @dev: Preconditions can be set to allow only members to add a book *)
-    (* @dev: Access controls logic omitted for brevity *)
+    courses <- courseInventory;
 
-    books <- courseInventory;
-    (* new_book_id = let one = Uint32 1 in builtin add last_book_id one;*)
-
-    bookExist = builtin contains books bookID;
-    match bookExist with
+    courseExist = builtin contains courses courseID;
+    match courseExist with
     | True =>
         msg = {_tag: "Main";
                     _recipient: _sender;
                     _amount: Uint128 0;
-                    code: code_bookid_exist};
+                    code: code_courseid_exist};
         msgs = one_msg msg;
         send msgs
     | False =>
-        (* Creating a new Book Model *)
-        (* A new book model is a Pair of book_title and author *)
-        new_book = Pair {(String) (String)} book_title author;
+        new_course = Pair {(String) (String)} course_title author;
 
-        (* Add the new book to the book_inventory Map, with BookID as the key*)
-        add_to_inventory = builtin put books bookID new_book;
+        add_to_inventory = builtin put courses courseID new_course;
 
-        (* Change mutable fields once everything has been completed. *)
         courseInventory := add_to_inventory; 
 
-        tmp = Some {Uint32} bookID;
+        tmp = Some {Uint32} courseID;
         lastCourseID := tmp;
 
         msg = {_tag: "Main"; 
@@ -154,28 +146,21 @@ transition addCourse(book_title: String, author: String, bookID: Uint32)
     end
 end
 
-(* @notice: Allows a _sender to remove a book from the bookstore *)
-(* @dev   : Access controls are omitted for brevity. In production contracts, *)
-(*          you will want to implement proper access controls to allow only *)
-(*          an owner or member to remove a book. *)
 
-transition removeCourse(book_id: Uint32)
-    (* @dev: Preconditions can be set to allow only members to remove a book *)
-    (* @dev: Access controls logic omitted for brevity *)
+transition removeCourse(course_id: Uint32)
 
-    (* preconditions  *)
-    books <- courseInventory;
-    exist = builtin contains books book_id;
+    courses <- courseInventory;
+    exist = builtin contains courses course_id;
     match exist with
     | False =>
         msg = {_tag: "Main"; 
                 _recipient: _sender; 
                 _amount: Uint128 0; 
-                code: code_book_not_found};
+                code: code_course_not_found};
         msgs = one_msg msg;
         send msgs
     | True =>
-        removed = builtin remove books book_id;
+        removed = builtin remove courses course_id;
         courseInventory := removed;
 
         msg = {_tag: "Main"; 
@@ -188,24 +173,24 @@ transition removeCourse(book_id: Uint32)
 end
 
 
-transition updateCourse(book_id: Uint32, book_title: String, author: String)
+transition updateCourse(course_id: Uint32, course_title: String, author: String)
 
-    books <- courseInventory;
-    exist = builtin contains books book_id;
+    courses <- courseInventory;
+    exist = builtin contains courses course_id;
     match exist with
     | False =>
          msg = {_tag: "Main"; 
                 _recipient: _sender; 
                 _amount: Uint128 0; 
-                code: code_book_not_found};
+                code: code_course_not_found};
         msgs = one_msg msg;
         send msgs
     | True =>
-        new_book = Pair {(String) (String)} book_title author;
+        new_course = Pair {(String) (String)} course_title author;
 
-        add_to_inventory = builtin put books book_id new_book;
+        add_to_inventory = builtin put courses course_id new_course;
 
-        bookInventory := add_to_inventory; 
+        courseInventory := add_to_inventory; 
 
         msg = {_tag: "Main"; 
                 _recipient: _sender; 
