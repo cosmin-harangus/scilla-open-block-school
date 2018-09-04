@@ -15,7 +15,8 @@ let code_courseid_exist = Uint32 4
 (***************************************************)
 (*             The contract definition             *)
 (***************************************************)
-contract OpenBlockScool
+
+contract OpenBookSchool
 (owner: ByStr20,
 schoolName: String)
 
